@@ -59,6 +59,18 @@ class PipelineTest extends PHPUnit_Framework_TestCase
         unset($_SERVER['__test.pipe.parameters']);
     }
 
+    public function testPipelineUsageWithMethodAndParameter()
+    {
+        $result = (new Pipeline(new Illuminate\Container\Container))
+            ->send('foo')
+            ->through('PipelineTestPipeOne@outherMethod:parameter')
+            ->then(function ($piped) {
+                return $piped;
+            });
+
+        $this->assertEquals('parameter_foo', $result);
+    }
+
     public function testPipelineViaChangesTheMethodBeingCalledOnThePipes()
     {
         $pipelineInstance = new Pipeline(new Illuminate\Container\Container);
@@ -96,6 +108,13 @@ class PipelineTestPipeOne
     public function differentMethod($piped, $next)
     {
         return $next($piped);
+    }
+
+    public function outherMethod($piped, $next, $parameter)
+    {
+        $result = $parameter.'_'.$piped;
+
+        return $next($result);
     }
 }
 

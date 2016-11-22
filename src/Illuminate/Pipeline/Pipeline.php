@@ -119,7 +119,7 @@ class Pipeline implements PipelineContract
                     // the appropriate method and arguments, returning the results back out.
                     return $pipe($passable, $stack);
                 } elseif (! is_object($pipe)) {
-                    list($name, $parameters) = $this->parsePipeString($pipe);
+                    list($name, $parameters, $method) = $this->parsePipeString($pipe);
 
                     // If the pipe is a string we will parse the string and resolve the class out
                     // of the dependency injection container. We can then build a callable and
@@ -134,7 +134,9 @@ class Pipeline implements PipelineContract
                     $parameters = [$passable, $stack];
                 }
 
-                return $pipe->{$this->method}(...$parameters);
+                $method = isset($method) ? $method : $this->method;
+
+                return $pipe->{$method}(...$parameters);
             };
         };
     }
@@ -160,13 +162,15 @@ class Pipeline implements PipelineContract
      */
     protected function parsePipeString($pipe)
     {
-        list($name, $parameters) = array_pad(explode(':', $pipe, 2), 2, []);
+        list($pipe, $parameters) = array_pad(explode(':', $pipe, 2), 2, []);
+
+        list($name, $method) = array_pad(explode('@', $pipe, 2), 2, null);
 
         if (is_string($parameters)) {
             $parameters = explode(',', $parameters);
         }
 
-        return [$name, $parameters];
+        return [$name, $parameters, $method];
     }
 
     /**
